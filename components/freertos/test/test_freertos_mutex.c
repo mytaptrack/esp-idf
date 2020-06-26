@@ -2,7 +2,6 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "unity.h"
-#include "esp_ipc.h"
 #include "test_utils.h"
 
 static void mutex_release_task(void* arg)
@@ -12,7 +11,7 @@ static void mutex_release_task(void* arg)
     TEST_FAIL_MESSAGE("should not be reached");
 }
 
-TEST_CASE_ESP32("mutex released not by owner causes an assert", "[freertos][reset=abort,SW_CPU_RESET]")
+TEST_CASE("mutex released not by owner causes an assert", "[freertos][reset=abort,SW_CPU_RESET]")
 {
     SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
     xSemaphoreTake(mutex, portMAX_DELAY);

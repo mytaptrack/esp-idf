@@ -174,7 +174,7 @@ void BTA_DmSetDeviceName(const char *p_name)
     if ((p_msg = (tBTA_DM_API_SET_NAME *) osi_malloc(sizeof(tBTA_DM_API_SET_NAME))) != NULL) {
         p_msg->hdr.event = BTA_DM_API_SET_NAME_EVT;
         /* truncate the name if needed */
-        BCM_STRNCPY_S((char *)p_msg->name, sizeof(p_msg->name), p_name, BD_NAME_LEN - 1);
+        BCM_STRNCPY_S((char *)p_msg->name, p_name, BD_NAME_LEN - 1);
         p_msg->name[BD_NAME_LEN - 1] = 0;
 
         bta_sys_sendmsg(p_msg);
@@ -310,6 +310,17 @@ void BTA_DmUpdateWhiteList(BOOLEAN add_remove,  BD_ADDR remote_addr, tBLE_ADDR_T
         p_msg->addr_type = addr_type;
         p_msg->add_wl_cb = add_wl_cb;
         memcpy(p_msg->remote_addr, remote_addr, sizeof(BD_ADDR));
+
+        bta_sys_sendmsg(p_msg);
+    }
+}
+
+void BTA_DmClearWhiteList(void)
+{
+    tBTA_DM_API_ENABLE *p_msg;
+    if ((p_msg = (tBTA_DM_API_ENABLE *)osi_malloc(sizeof(tBTA_DM_API_ENABLE))) != NULL) {
+        p_msg->hdr.event = BTA_DM_API_CLEAR_WHITE_LIST_EVT;
+        p_msg->p_sec_cback = NULL;
 
         bta_sys_sendmsg(p_msg);
     }

@@ -5,7 +5,7 @@
 #include <idp.iss>
 
 #define MyAppName "ESP-IDF Tools"
-#define MyAppVersion "2.2"
+#define MyAppVersion "2.3"
 #define MyAppPublisher "Espressif Systems (Shanghai) Co. Ltd."
 #define MyAppURL "https://github.com/espressif/esp-idf"
 
@@ -79,6 +79,8 @@ Type: files; Name: "{autodesktop}\{#IDFCmdExeShortcutFile}"
 [Tasks]
 Name: createlnk; Description: "Create Start Menu shortcut for the ESP-IDF Tools Command Prompt";
 Name: createdsk; Description: "Create Desktop shortcut for the ESP-IDF Tools Command Prompt";
+; WD registration checkbox is identified by 'Windows Defender' substring anywhere in its caption, not by the position index in WizardForm.TasksList.Items
+; Please, keep this in mind when making changes to the item's description - WD checkbox is to be disabled on systems without the Windows Defender installed
 Name: wdexcl; Description: "Register the ESP-IDF Tools executables as Windows Defender exclusions (improves compilation speed, requires elevation)";
 
 [Run]

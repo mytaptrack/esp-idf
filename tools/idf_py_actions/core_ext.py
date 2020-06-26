@@ -8,17 +8,10 @@ import click
 from idf_py_actions.constants import GENERATORS, SUPPORTED_TARGETS
 from idf_py_actions.errors import FatalError
 from idf_py_actions.global_options import global_options
-from idf_py_actions.tools import ensure_build_directory, idf_version, merge_action_lists, realpath, run_tool
+from idf_py_actions.tools import ensure_build_directory, idf_version, merge_action_lists, realpath, run_target, TargetChoice
 
 
 def action_extensions(base_actions, project_path):
-    def run_target(target_name, args):
-        generator_cmd = GENERATORS[args.generator]["command"]
-
-        if args.verbose:
-            generator_cmd += [GENERATORS[args.generator]["verbose_flag"]]
-
-        run_tool(generator_cmd[0], generator_cmd + [target_name], args.build_dir)
 
     def build_target(target_name, ctx, args):
         """
@@ -35,9 +28,11 @@ def action_extensions(base_actions, project_path):
         Menuconfig target is build_target extended with the style argument for setting the value for the environment
         variable.
         """
-        # The subprocess lib cannot accept environment variables as "unicode" . This is a problem
-        # only in Python 2.
-        os.environ['MENUCONFIG_STYLE'] = style.encode(sys.getfilesystemencoding() or 'utf-8')
+        if sys.version_info[0] < 3:
+            # The subprocess lib cannot accept environment variables as "unicode".
+            # This encoding step is required only in Python 2.
+            style = style.encode(sys.getfilesystemencoding() or 'utf-8')
+        os.environ['MENUCONFIG_STYLE'] = style
         build_target(target_name, ctx, args)
 
     def fallback_target(target_name, ctx, args):
@@ -162,6 +157,15 @@ def action_extensions(base_actions, project_path):
         print("ESP-IDF %s" % version)
         sys.exit(0)
 
+    def list_targets_callback(ctx, param, value):
+        if not value or ctx.resilient_parsing:
+            return
+
+        for target in SUPPORTED_TARGETS:
+            print(target)
+
+        sys.exit(0)
+
     root_options = {
         "global_options": [
             {
@@ -170,6 +174,13 @@ def action_extensions(base_actions, project_path):
                 "is_flag": True,
                 "expose_value": False,
                 "callback": idf_version_callback
+            },
+            {
+                "names": ["--list-targets"],
+                "help": "Print list of supported targets and exit.",
+                "is_flag": True,
+                "expose_value": False,
+                "callback": list_targets_callback
             },
             {
                 "names": ["-C", "--project-dir"],
@@ -261,7 +272,8 @@ def action_extensions(base_actions, project_path):
                             "The default value is \"aquatic\". It is possible to customize these themes further "
                             "as it is described in the Color schemes section of the kconfiglib documentation."),
                         "default": os.environ.get('MENUCONFIG_STYLE', 'aquatic'),
-                    }],
+                    }
+                ],
             },
             "confserver": {
                 "callback": build_target,
@@ -299,13 +311,13 @@ def action_extensions(base_actions, project_path):
             },
             "efuse_common_table": {
                 "callback": build_target,
-                "help": "Genereate C-source for IDF's eFuse fields.",
+                "help": "Generate C-source for IDF's eFuse fields.",
                 "order_dependencies": ["reconfigure"],
                 "options": global_options,
             },
             "efuse_custom_table": {
                 "callback": build_target,
-                "help": "Genereate C-source for user's eFuse fields.",
+                "help": "Generate C-source for user's eFuse fields.",
                 "order_dependencies": ["reconfigure"],
                 "options": global_options,
             },
@@ -367,7 +379,7 @@ def action_extensions(base_actions, project_path):
                     {
                         "names": ["idf-target"],
                         "nargs": 1,
-                        "type": click.Choice(SUPPORTED_TARGETS),
+                        "type": TargetChoice(SUPPORTED_TARGETS),
                     },
                 ],
                 "dependencies": ["fullclean"],

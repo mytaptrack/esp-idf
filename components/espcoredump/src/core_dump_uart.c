@@ -20,9 +20,9 @@
 #if CONFIG_IDF_TARGET_ESP32
 #include "esp32/rom/crc.h"
 #include "esp32/clk.h"
-#elif CONFIG_IDF_TARGET_ESP32S2BETA
-#include "esp32s2beta/rom/crc.h"
-#include "esp32s2beta/clk.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/crc.h"
+#include "esp32s2/clk.h"
 #endif
 
 const static DRAM_ATTR char TAG[] __attribute__((unused)) = "esp_core_dump_uart";
@@ -165,5 +165,10 @@ void esp_core_dump_to_uart(XtExcFrame *frame)
     ESP_COREDUMP_LOGI("Print core dump to uart...");
     esp_core_dump_write((void*)frame, &wr_cfg);
     ESP_COREDUMP_LOGI("Core dump has been written to uart.");
+}
+
+void esp_core_dump_init(void)
+{
+    ESP_COREDUMP_LOGI("Init core dump to UART");
 }
 #endif

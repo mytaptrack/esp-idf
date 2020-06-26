@@ -120,7 +120,7 @@ static uint32_t ledc_get_src_clk_freq(ledc_clk_cfg_t clk_cfg)
         src_clk_freq = LEDC_REF_CLK_HZ;
     } else if (clk_cfg == LEDC_USE_RTC8M_CLK) {
         src_clk_freq = s_ledc_slow_clk_8M;
-#ifdef CONFIG_IDF_TARGET_ESP32S2BETA
+#ifdef CONFIG_IDF_TARGET_ESP32S2
     } else if (clk_cfg == LEDC_USE_XTAL_CLK) {
         src_clk_freq = rtc_clk_xtal_freq_get() * 1000000;
 #endif
@@ -284,7 +284,7 @@ static esp_err_t ledc_set_timer_div(ledc_mode_t speed_mode, ledc_timer_t timer_n
     if ((speed_mode == LEDC_LOW_SPEED_MODE) && (clk_cfg == LEDC_USE_RTC8M_CLK)) {
         if(s_ledc_slow_clk_8M == 0) {
             if (ledc_slow_clk_calibrate() == false) {
-                goto error;    
+                goto error;
             }
         }
         div_param = ( (uint64_t) s_ledc_slow_clk_8M << 8 ) / freq_hz / precision;
@@ -565,6 +565,9 @@ void IRAM_ATTR ledc_fade_isr(void* arg)
     uint32_t intr_status = 0;
 
     for (speed_mode = 0; speed_mode < LEDC_SPEED_MODE_MAX; speed_mode++) {
+        if (p_ledc_obj[speed_mode] == NULL) {
+            continue;
+        }
         ledc_hal_get_fade_end_intr_status(&(p_ledc_obj[speed_mode]->ledc_hal), &intr_status);
         while(intr_status) {
             ledc_calc_fade_end_channel(&intr_status, &channel);

@@ -6,14 +6,16 @@ set(priv_requires)
 
 # If Ethernet disabled in Kconfig, this is a config-only component
 if(CONFIG_ETH_ENABLED)
-    set(srcs "src/esp_eth.c")
+    set(srcs "src/esp_eth.c" "src/esp_eth_phy.c")
     set(include "include")
     set(priv_requires "driver" "log") # require "driver" for using some GPIO APIs
 
-    # esp_netif related
-    if(esp_netif IN_LIST components_to_build)
-        list(APPEND srcs "src/esp_eth_netif_glue.c")
-        list(APPEND priv_requires "esp_netif")
+    if(NOT CMAKE_BUILD_EARLY_EXPANSION)
+        # esp_netif related
+        if(esp_netif IN_LIST components_to_build)
+            list(APPEND srcs "src/esp_eth_netif_glue.c")
+            list(APPEND priv_requires "esp_netif")
+        endif()
     endif()
 
     if(CONFIG_ETH_USE_ESP32_EMAC)

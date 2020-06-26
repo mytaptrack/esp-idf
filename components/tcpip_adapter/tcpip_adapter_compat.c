@@ -178,7 +178,12 @@ esp_err_t tcpip_adapter_set_default_wifi_handlers(void)
 
 esp_err_t tcpip_adapter_clear_default_wifi_handlers(void)
 {
-    return _esp_wifi_clear_default_wifi_handlers();
+    if (s_tcpip_adapter_compat) {
+        // Clear default handlers only if tcpip-adapter mode used
+        return _esp_wifi_clear_default_wifi_handlers();
+    }
+    // No action if tcpip-adapter compatibility enabled, but interfaces created/configured with esp-netif
+    return ESP_OK;
 }
 
 tcpip_adapter_if_t tcpip_adapter_if_from_esp_netif(esp_netif_t *esp_netif)
@@ -198,6 +203,11 @@ esp_err_t tcpip_adapter_get_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_i
 esp_err_t tcpip_adapter_get_ip6_linklocal(tcpip_adapter_if_t tcpip_if, ip6_addr_t *if_ip6)
 {
     return esp_netif_get_ip6_linklocal(netif_from_if(tcpip_if), (esp_ip6_addr_t*)if_ip6);
+}
+
+esp_err_t tcpip_adapter_get_ip6_global(tcpip_adapter_if_t tcpip_if, ip6_addr_t *if_ip6)
+{
+    return esp_netif_get_ip6_global(netif_from_if(tcpip_if), (esp_ip6_addr_t*)if_ip6);
 }
 
 esp_err_t tcpip_adapter_dhcpc_get_status(tcpip_adapter_if_t tcpip_if, tcpip_adapter_dhcp_status_t *status)

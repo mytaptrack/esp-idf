@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import os
 try:
@@ -593,7 +594,7 @@ class BaseLogTraceDataProcessorImpl:
         msg = event.get_message(self.felf)
         self.messages.append(msg)
         if self.print_log_events:
-            print(msg),
+            print(msg, end='')
 
 
 class HeapTraceParseError(ParseError):
@@ -657,6 +658,10 @@ class HeapTraceEvent:
     def addr(self):
         return self.trace_event.params['addr'].value
 
+    @property
+    def callers(self):
+        return self.trace_event.params['callers'].value
+
     def __repr__(self):
         if len(self.toolchain) and len(self.elf_path):
             callers = os.linesep
@@ -676,7 +681,8 @@ class HeapTraceEvent:
             return "[{:.9f}] HEAP: Allocated {:d} bytes @ 0x{:x} from {} on core {:d} by: {}".format(self.trace_event.ts,
                                                                                                      self.size, self.addr,
                                                                                                      self.trace_event.ctx_desc,
-                                                                                                     self.trace_event.core_id, callers)
+                                                                                                     self.trace_event.core_id,
+                                                                                                     callers)
         else:
             return "[{:.9f}] HEAP: Freed bytes @ 0x{:x} from {} on core {:d} by: {}".format(self.trace_event.ts,
                                                                                             self.addr, self.trace_event.ctx_desc,

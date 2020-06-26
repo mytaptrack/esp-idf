@@ -83,13 +83,34 @@
     # run test
     - python Runner.py $TEST_CASE_PATH -c $CONFIG_FILE -e $ENV_FILE
 
+.test_app_template:
+  extends: .example_test_template
+  stage: target_test
+  dependencies:
+    - assign_test
+  only:
+    refs:
+      - master
+      - /^release\/v/
+      - /^v\d+\.\d+(\.\d+)?($|-)/
+      - triggers
+      - schedules
+    variables:
+      - $BOT_TRIGGER_WITH_LABEL == null
+      - $BOT_LABEL_CUSTOM_TEST
+  variables:
+    TEST_FW_PATH: "$CI_PROJECT_DIR/tools/tiny-test-fw"
+    TEST_CASE_PATH: "$CI_PROJECT_DIR/tools/test_apps"
+    CONFIG_FILE_PATH: "${CI_PROJECT_DIR}/tools/test_apps/test_configs"
+    LOG_PATH: "$CI_PROJECT_DIR/TEST_LOGS"
+    ENV_FILE: "$CI_PROJECT_DIR/ci-test-runner-configs/$CI_RUNNER_DESCRIPTION/EnvConfig.yml"
+
 .unit_test_template:
   extends: .example_test_template
   stage: target_test
   dependencies:
     - assign_test
-    - build_esp_idf_tests_make
-    - build_esp_idf_tests_cmake
+    - build_esp_idf_tests_cmake_esp32
   only:
     refs:
       - master
@@ -106,6 +127,7 @@
     CONFIG_FILE_PATH: "${CI_PROJECT_DIR}/components/idf_test/unit_test/CIConfigs"
     LOG_PATH: "$CI_PROJECT_DIR/TEST_LOGS"
     ENV_FILE: "$CI_PROJECT_DIR/ci-test-runner-configs/$CI_RUNNER_DESCRIPTION/EnvConfig.yml"
+    PYTHON_VER: 3
 
 .test_template:
   stage: target_test
@@ -122,7 +144,7 @@
       - $BOT_LABEL_INTEGRATION_TEST
   dependencies:
     - assign_test
-    - build_ssc
+    - build_ssc_esp32
   artifacts:
     when: always
     reports:
@@ -182,12 +204,30 @@ test_weekend_network:
     ENV_FILE: "$CI_PROJECT_DIR/components/lwip/weekend_test/env.yml"
     CONFIG_FILE_PATH: "$CI_PROJECT_DIR/components/lwip/weekend_test"
 
-example_test_001:
+example_test_001A:
+  extends: .example_test_template
+  parallel: 4
+  artifacts:
+      when: always
+      paths:
+        - $CI_PROJECT_DIR/examples/*/*/*.log
+      expire_in: 1 week
+  tags:
+    - ESP32
+    - Example_WIFI
+
+example_test_001B:
+  extends: .example_test_template
+  tags:
+    - ESP32
+    - Example_EthKitV1
+
+example_test_001C:
   extends: .example_test_template
   parallel: 2
   tags:
     - ESP32
-    - Example_WIFI
+    - Example_GENERIC
 
 example_test_002:
   extends: .example_test_template
@@ -261,7 +301,7 @@ example_test_009:
   artifacts:
       when: always
       paths:
-        - $CI_PROJECT_DIR/examples/get-started/hello_world/*.log
+        - $CI_PROJECT_DIR/examples/*/*/*.log
       expire_in: 1 week
   variables:
     SETUP_TOOLS: "1"
@@ -292,9 +332,58 @@ example_test_012:
     - ESP32
     - Example_RMT_IR_PROTOCOLS
 
+example_test_013:
+  extends: .example_test_template
+  tags:
+    - ESP32
+    - UT_T1_SDMODE
+
+example_test_014:
+  extends: .example_test_template
+  tags:
+    - ESP32
+    - 8Mpsram
+
+example_test_015:
+  extends: .example_test_template
+  tags:
+    - ESP32
+    - Example_PPP
+  artifacts:
+      when: always
+      expire_in: 1 week
+      paths:
+        - $CI_PROJECT_DIR/examples/*/*/*.log
+        - $LOG_PATH
+
+test_app_test_001:
+  extends: .test_app_template
+  tags:
+    - ESP32
+    - test_jtag_arm
+  artifacts:
+      when: always
+      paths:
+        - $CI_PROJECT_DIR/tools/test_apps/system/gdb_loadable_elf/*.log
+      expire_in: 1 week
+  variables:
+    SETUP_TOOLS: "1"
+
+test_app_test_002:
+  extends: .test_app_template
+  tags:
+    - ESP32
+    - Example_WIFI
+
+test_app_test_003:
+  extends: .test_app_template
+  tags:
+    - ESP32
+    - Example_PPP
+
 UT_001:
   extends: .unit_test_template
-  parallel: 30
+  parallel: 38
   tags:
     - ESP32_IDF
     - UT_T1_1
@@ -303,7 +392,7 @@ UT_001:
 
 UT_002:
   extends: .unit_test_template
-  parallel: 10
+  parallel: 15
   tags:
     - ESP32_IDF
     - UT_T1_1
@@ -342,13 +431,6 @@ UT_008:
     - UT_T1_GPIO
     - psram
 
-UT_010:
-  extends: .unit_test_template
-  tags:
-    - ESP32_IDF
-    - UT_T1_PCNT
-    - psram
-
 UT_012:
   extends: .unit_test_template
   tags:
@@ -384,7 +466,7 @@ UT_017:
 
 UT_018:
   extends: .unit_test_template
-  parallel: 2
+  parallel: 5
   tags:
     - ESP32_IDF
     - UT_T1_1
@@ -418,13 +500,6 @@ UT_024:
     - UT_T1_MCPWM
     - psram
 
-UT_026:
-  extends: .unit_test_template
-  tags:
-    - ESP32_IDF
-    - UT_T1_I2S
-    - psram
-
 UT_028:
   extends: .unit_test_template
   tags:
@@ -451,11 +526,29 @@ UT_034:
     - ESP32_IDF
     - UT_T1_ESP_FLASH
 
-UT_035:
+.unit_test_s2_template:
   extends: .unit_test_template
-  parallel: 20
+  dependencies:
+    - assign_test
+    - build_esp_idf_tests_cmake_esp32s2
+  only:
+    refs:
+      # Due to lack of runners, the tests are only done by manual trigger
+      # - master
+      # - /^release\/v/
+      # - /^v\d+\.\d+(\.\d+)?($|-)/
+      - triggers
+      - schedules
+    variables:
+      # Due to lack of runners, S2 tests will only be triggered with label (@bot test will not trigger)
+      # - $BOT_TRIGGER_WITH_LABEL == null
+      - $BOT_LABEL_UNIT_TEST_S2
+
+UT_035:
+  extends: .unit_test_s2_template
+  parallel: 38
   tags:
-    - ESP32S2BETA_IDF
+    - ESP32S2_IDF
     - UT_T1_1
 
 UT_036:
@@ -465,11 +558,12 @@ UT_036:
     - UT_T1_PSRAMV0
     - psram
 
-UT_037:
-  extends: .unit_test_template
-  tags:
-    - ESP32S2BETA_IDF
-    - UT_T1_LEDC
+# ToDo: re-enable this job when ESP32-S2 LEDC runner installed
+# UT_037:
+#   extends: .unit_test_template
+#   tags:
+#     - ESP32S2_IDF
+#     - UT_T1_LEDC
 
 UT_041:
   extends: .unit_test_template

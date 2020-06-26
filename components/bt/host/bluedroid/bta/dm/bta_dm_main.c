@@ -28,6 +28,7 @@
 #include "osi/allocator.h"
 #include <string.h>
 
+#include "esp_coexist.h"
 
 /*****************************************************************************
 ** Constants and types
@@ -163,6 +164,7 @@ const tBTA_DM_ACTION bta_dm_action[BTA_DM_MAX_EVT] = {
     bta_dm_remove_device,                   /* BTA_DM_API_REMOVE_DEVICE_EVT */
     bta_dm_ble_set_channels,                /* BTA_DM_API_BLE_SET_CHANNELS_EVT */
     bta_dm_update_white_list,               /* BTA_DM_API_UPDATE_WHITE_LIST_EVT */
+    bta_dm_clear_white_list,                /* BTA_DM_API_CLEAR_WHITE_LIST_EVT */
     bta_dm_ble_read_adv_tx_power,           /* BTA_DM_API_BLE_READ_ADV_TX_POWER_EVT */
     bta_dm_ble_read_rssi,                   /* BTA_DM_API_BLE_READ_RSSI_EVT */
 #if BLE_INCLUDED == TRUE
@@ -405,6 +407,31 @@ BOOLEAN bta_dm_sm_execute(BT_HDR *p_msg)
     }
 
     return TRUE;
+}
+
+void BTA_DmCoexEventTrigger(uint32_t event)
+{
+    switch(event) {
+    case BTA_COEX_EVT_SCAN_STARTED:
+    case BTA_COEX_EVT_SCAN_STOPPED:
+    case BTA_COEX_EVT_SNIFF_ENTER:
+    case BTA_COEX_EVT_SNIFF_EXIT:
+    case BTA_COEX_EVT_A2DP_PAUSED_ENTER:
+    case BTA_COEX_EVT_A2DP_PAUSED_EXIT:
+    case BTA_COEX_EVT_ACL_CONNECTED:
+    case BTA_COEX_EVT_ACL_DISCONNECTED:
+        break;
+    case BTA_COEX_EVT_STREAMING_STARTED:
+        esp_coex_status_bit_set(ESP_COEX_ST_TYPE_BT, ESP_COEX_BT_ST_A2DP_STREAMING);
+        esp_coex_status_bit_clear(ESP_COEX_ST_TYPE_BT, ESP_COEX_BT_ST_A2DP_PAUSED);
+        break;
+    case BTA_COEX_EVT_STREAMING_STOPPED:
+        esp_coex_status_bit_clear(ESP_COEX_ST_TYPE_BT, ESP_COEX_BT_ST_A2DP_STREAMING);
+        esp_coex_status_bit_clear(ESP_COEX_ST_TYPE_BT, ESP_COEX_BT_ST_A2DP_PAUSED);
+        break;
+    default:
+        break;
+    }
 }
 
 /*******************************************************************************

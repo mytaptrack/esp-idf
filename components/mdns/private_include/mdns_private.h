@@ -56,7 +56,7 @@
 #define MDNS_ANSWER_AAAA_SIZE       16
 
 #define MDNS_SERVICE_PORT           5353                    // UDP port that the server runs on
-#define MDNS_SERVICE_STACK_DEPTH    4096                    // Stack size for the service thread
+#define MDNS_SERVICE_STACK_DEPTH    CONFIG_MDNS_TASK_STACK_SIZE
 #define MDNS_TASK_PRIORITY          CONFIG_MDNS_TASK_PRIORITY
 #if (MDNS_TASK_PRIORITY > ESP_TASK_PRIO_MAX)
 #error "mDNS task priority is higher than ESP_TASK_PRIO_MAX"
@@ -141,7 +141,7 @@ typedef enum {
 
 typedef enum {
     MDNS_ANSWER, MDNS_NS, MDNS_EXTRA
-} mdns_parsed_recort_type_t;
+} mdns_parsed_record_type_t;
 
 typedef enum {
     ACTION_SYSTEM_EVENT,
@@ -210,7 +210,7 @@ typedef struct mdns_parsed_question_s {
 
 typedef struct mdns_parsed_record_s {
     struct mdns_parsed_record_s * next;
-    mdns_parsed_recort_type_t record_type;
+    mdns_parsed_record_type_t record_type;
     uint16_t type;
     uint16_t clas;
     uint8_t flush;

@@ -2,8 +2,7 @@
 #include "esp_partition.h"
 #include "unity.h"
 
-
-TEST_CASE_ESP32("Basic handling of a partition in external flash", "[partition]")
+TEST_CASE("Basic handling of a partition in external flash", "[partition]")
 {
     esp_flash_t flash = {
             .size = 1 * 1024 * 1024,

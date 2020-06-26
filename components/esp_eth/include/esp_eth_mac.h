@@ -24,7 +24,6 @@ extern "C" {
 #include "driver/spi_master.h"
 #endif
 
-
 /**
 * @brief Ethernet MAC
 *
@@ -73,6 +72,30 @@ struct esp_eth_mac_s {
     *
     */
     esp_err_t (*deinit)(esp_eth_mac_t *mac);
+
+    /**
+    * @brief Start Ethernet MAC
+    *
+    * @param[in] mac: Ethernet MAC instance
+    *
+    * @return
+    *      - ESP_OK: start Ethernet MAC successfully
+    *      - ESP_FAIL: start Ethernet MAC failed because some other error occurred
+    *
+    */
+    esp_err_t (*start)(esp_eth_mac_t *mac);
+
+    /**
+    * @brief Stop Ethernet MAC
+    *
+    * @param[in] mac: Ethernet MAC instance
+    *
+    * @return
+    *      - ESP_OK: stop Ethernet MAC successfully
+    *      - ESP_FAIL: stop Ethernet MAC failed because some error occurred
+    *
+    */
+    esp_err_t (*stop)(esp_eth_mac_t *mac);
 
     /**
     * @brief Transmit packet from Ethernet MAC
@@ -252,7 +275,11 @@ typedef struct {
     uint32_t rx_task_prio;        /*!< Priority of the receive task */
     int smi_mdc_gpio_num;         /*!< SMI MDC GPIO number */
     int smi_mdio_gpio_num;        /*!< SMI MDIO GPIO number */
+    uint32_t flags;               /*!< Flags that specify extra capability for mac driver */
 } eth_mac_config_t;
+
+#define ETH_MAC_FLAG_WORK_WITH_CACHE_DISABLE (1 << 0) /*!< MAC driver can work when cache is disabled */
+#define ETH_MAC_FLAG_PIN_TO_CORE (1 << 1)             /*!< Pin MAC task to the CPU core where driver installation happened */
 
 /**
  * @brief Default configuration for Ethernet MAC object
@@ -265,6 +292,7 @@ typedef struct {
         .rx_task_prio = 15,         \
         .smi_mdc_gpio_num = 23,     \
         .smi_mdio_gpio_num = 18,    \
+        .flags = 0,                 \
     }
 
 #if CONFIG_ETH_USE_ESP32_EMAC
@@ -278,7 +306,7 @@ typedef struct {
 *      - NULL: create MAC instance failed because some error occurred
 */
 esp_eth_mac_t *esp_eth_mac_new_esp32(const eth_mac_config_t *config);
-#endif
+#endif // CONFIG_ETH_USE_ESP32_EMAC
 
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
 /**
@@ -311,10 +339,18 @@ typedef struct {
 *      - NULL: create MAC instance failed because some error occurred
 */
 esp_eth_mac_t *esp_eth_mac_new_dm9051(const eth_dm9051_config_t *dm9051_config, const eth_mac_config_t *mac_config);
-#endif
-
+#endif // CONFIG_ETH_SPI_ETHERNET_DM9051
 
 #if CONFIG_ETH_USE_OPENETH
+/**
+* @brief Create OpenCores Ethernet MAC instance
+*
+* @param config: Ethernet MAC configuration
+*
+* @return
+*      - instance: create MAC instance successfully
+*      - NULL: create MAC instance failed because some error occurred
+*/
 esp_eth_mac_t *esp_eth_mac_new_openeth(const eth_mac_config_t *config);
 #endif // CONFIG_ETH_USE_OPENETH
 

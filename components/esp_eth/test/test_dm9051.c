@@ -11,6 +11,8 @@
 #include "esp_log.h"
 #include "driver/gpio.h"
 
+#if CONFIG_ETH_SPI_ETHERNET_DM9051
+
 static const char *TAG = "dm9051_test";
 
 #define ETH_START_BIT BIT(0)
@@ -65,7 +67,6 @@ static void got_ip_event_handler(void *arg, esp_event_base_t event_base,
     xEventGroupSetBits(eth_event_group, ETH_GOT_IP_BIT);
 }
 
-#if CONFIG_ETH_USE_SPI_ETHERNET
 TEST_CASE("dm9051 io test", "[ethernet][dm9051][ignore]")
 {
     spi_device_handle_t spi_handle = NULL;

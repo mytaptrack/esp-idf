@@ -45,6 +45,7 @@ COMPONENT_PRIV_INCLUDEDIRS +=   host/bluedroid/bta/include                   \
                                 host/bluedroid/btc/profile/std/gatt/include  \
                                 host/bluedroid/btc/profile/std/gap/include   \
                                 host/bluedroid/btc/profile/std/a2dp/include  \
+                                host/bluedroid/btc/profile/std/hid/include   \
                                 host/bluedroid/btc/profile/std/include       \
                                 host/bluedroid/btc/include                   \
                                 host/bluedroid/btif/include                  \
@@ -96,6 +97,7 @@ COMPONENT_SRCDIRS +=    host/bluedroid/bta/dm                      \
                         host/bluedroid/btc/profile/std/spp         \
                         host/bluedroid/btc/profile/std/hf_ag       \
                         host/bluedroid/btc/profile/std/hf_client   \
+                        host/bluedroid/btc/profile/std/hid         \
                         host/bluedroid/btc/profile                 \
                         host/bluedroid/stack/btm                   \
                         host/bluedroid/stack/btu                   \
@@ -197,7 +199,8 @@ COMPONENT_SRCDIRS += host/nimble/nimble/nimble/host/src                         
                      host/nimble/nimble/nimble/host/util/src                       \
                      host/nimble/nimble/nimble/host/store/ram/src                  \
                      host/nimble/nimble/nimble/host/store/config/src               \
-                     host/nimble/esp-hci/src
+                     host/nimble/esp-hci/src                                       \
+                     host/nimble/port/src
 
 ifndef CONFIG_BT_NIMBLE_CRYPTO_STACK_MBEDTLS
 COMPONENT_SRCDIRS += host/nimble/nimble/ext/tinycrypt/src

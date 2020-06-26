@@ -71,10 +71,10 @@ static int ssl_connect(esp_transport_handle_t t, const char *host, int port, int
     ssl->cfg.timeout_ms = timeout_ms;
     ssl->ssl_initialized = true;
     ssl->tls = esp_tls_init();
-    if (esp_tls_conn_new_sync(host, strlen(host), port, &ssl->cfg, ssl->tls) < 0) {
+    if (esp_tls_conn_new_sync(host, strlen(host), port, &ssl->cfg, ssl->tls) <= 0) {
         ESP_LOGE(TAG, "Failed to open a new connection");
         esp_transport_set_errors(t, ssl->tls->error_handle);
-        esp_tls_conn_delete(ssl->tls);
+        esp_tls_conn_destroy(ssl->tls);
         ssl->tls = NULL;
         return -1;
     }
@@ -170,7 +170,8 @@ static int ssl_close(esp_transport_handle_t t)
     int ret = -1;
     transport_ssl_t *ssl = esp_transport_get_context_data(t);
     if (ssl->ssl_initialized) {
-        esp_tls_conn_delete(ssl->tls);
+        ret = esp_tls_conn_destroy(ssl->tls);
+        ssl->conn_state = TRANS_SSL_INIT;
         ssl->ssl_initialized = false;
     }
     return ret;
@@ -245,6 +246,15 @@ void esp_transport_ssl_set_client_key_data(esp_transport_handle_t t, const char 
     }
 }
 
+void esp_transport_ssl_set_client_key_password(esp_transport_handle_t t, const char *password, int password_len)
+{
+    transport_ssl_t *ssl = esp_transport_get_context_data(t);
+    if (t && ssl) {
+        ssl->cfg.clientkey_password = (void *)password;
+        ssl->cfg.clientkey_password_len = password_len;
+    }
+}
+
 void esp_transport_ssl_set_client_key_data_der(esp_transport_handle_t t, const char *data, int len)
 {
     transport_ssl_t *ssl = esp_transport_get_context_data(t);
@@ -267,6 +277,14 @@ void esp_transport_ssl_skip_common_name_check(esp_transport_handle_t t)
     transport_ssl_t *ssl = esp_transport_get_context_data(t);
     if (t && ssl) {
         ssl->cfg.skip_common_name = true;
+    }
+}
+
+void esp_transport_ssl_use_secure_element(esp_transport_handle_t t)
+{
+    transport_ssl_t *ssl = esp_transport_get_context_data(t);
+    if (t && ssl) {
+        ssl->cfg.use_secure_element = true;
     }
 }
 

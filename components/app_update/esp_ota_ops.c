@@ -157,7 +157,8 @@ esp_err_t esp_ota_begin(const esp_partition_t *partition, size_t image_size, esp
     if ((image_size == 0) || (image_size == OTA_SIZE_UNKNOWN)) {
         ret = esp_partition_erase_range(partition, 0, partition->size);
     } else {
-        ret = esp_partition_erase_range(partition, 0, (image_size / SPI_FLASH_SEC_SIZE + 1) * SPI_FLASH_SEC_SIZE);
+        const int aligned_erase_size = (image_size + SPI_FLASH_SEC_SIZE - 1) & ~(SPI_FLASH_SEC_SIZE - 1);
+        ret = esp_partition_erase_range(partition, 0, aligned_erase_size);
     }
 
     if (ret != ESP_OK) {
@@ -246,6 +247,43 @@ esp_err_t esp_ota_write(esp_ota_handle_t handle, const void *data, size_t size)
 
     //if go to here ,means don't find the handle
     ESP_LOGE(TAG,"not found the handle");
+    return ESP_ERR_INVALID_ARG;
+}
+
+esp_err_t esp_ota_write_with_offset(esp_ota_handle_t handle, const void *data, size_t size, uint32_t offset)
+{
+    const uint8_t *data_bytes = (const uint8_t *)data;
+    esp_err_t ret;
+    ota_ops_entry_t *it;
+
+    if (data == NULL) {
+        ESP_LOGE(TAG, "write data is invalid");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // find ota handle in linked list
+    for (it = LIST_FIRST(&s_ota_ops_entries_head); it != NULL; it = LIST_NEXT(it, entries)) {
+        if (it->handle == handle) {
+            // must erase the partition before writing to it
+            assert(it->erased_size > 0 && "must erase the partition before writing to it");
+
+            /* esp_ota_write_with_offset is used to write data in non contiguous manner.
+             * Hence, unaligned data(less than 16 bytes) cannot be cached if flash encryption is enabled.
+             */
+            if (esp_flash_encryption_enabled() && (size % 16)) {
+                ESP_LOGE(TAG, "Size should be 16byte aligned for flash encryption case");
+                return ESP_ERR_INVALID_ARG;
+            }
+            ret = esp_partition_write(it->part, offset, data_bytes, size);
+            if (ret == ESP_OK) {
+                it->wrote_size += size;
+            }
+            return ret;
+        }
+    }
+
+    // OTA handle is not found in linked list
+    ESP_LOGE(TAG,"OTA handle not found");
     return ESP_ERR_INVALID_ARG;
 }
 

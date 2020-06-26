@@ -7,7 +7,6 @@
 #include "ccomp_timer.h"
 
 #include "freertos/FreeRTOS.h"
-#include "freertos/portmacro.h"
 
 #include "unity.h"
 
@@ -18,7 +17,7 @@
 #define CACHE_LINE_SIZE         32
 #define CACHE_SIZE              (1 << 15)
 // Only test half due to lack of memory
-#elif CONFIG_IDF_TARGET_ESP32S2BETA
+#elif CONFIG_IDF_TARGET_ESP32S2
 // Default cache configuration - no override specified on
 // test_utils config
 #define CACHE_WAYS              8
@@ -62,7 +61,7 @@ __aligned(CACHE_SIZE / CACHE_WAYS) static void test_func3(void)
     FUNC();
 }
 
-#if CONFIG_IDF_TARGET_ESP32S2BETA
+#if TEMPORARY_DISABLED_FOR_TARGETS(ESP32)
 __aligned(CACHE_SIZE / CACHE_WAYS) static void test_func4(void)
 {
     FUNC();
@@ -154,7 +153,7 @@ static ccomp_test_time_t IRAM_ATTR perform_test_at_hit_rate(int hit_rate)
     static portMUX_TYPE m = portMUX_INITIALIZER_UNLOCKED;
     ccomp_test_call_t calls;
     ccomp_test_func_t alts[] = {test_func1, test_func2, test_func3,
-#if CONFIG_IDF_TARGET_ESP32S2BETA
+#if TEMPORARY_DISABLED_FOR_TARGETS(ESP32)
     test_func4, test_func5, test_func6, test_func7, test_func8, test_func9,
 #endif
     };
@@ -222,7 +221,7 @@ TEST_CASE("instruction cache hit rate sweep test", "[test_utils][ccomp_timer]")
 
         ESP_LOGI(TAG, "Hit Rate(%%): %d    Wall Time(us): %lld    Compensated Time(us): %lld    Error(%%): %f", i, (long long)t_hr.wall, (long long)t_hr.ccomp, error);
 
-        // Check if the measured time is at least within some percent of the 
+        // Check if the measured time is at least within some percent of the
         // reference.
         TEST_ASSERT(error <= 5.0f);
     }

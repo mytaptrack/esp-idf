@@ -93,6 +93,16 @@ void esp_transport_ssl_set_client_cert_data_der(esp_transport_handle_t t, const 
 void esp_transport_ssl_set_client_key_data(esp_transport_handle_t t, const char *data, int len);
 
 /**
+ * @brief      Set SSL client key password if the key is password protected. The configured
+ *             password is passed to the underlying TLS stack to decrypt the client key
+ *
+ * @param      t     ssl transport
+ * @param[in]  password  Pointer to the password
+ * @param[in]  password_len   Password length
+ */
+void esp_transport_ssl_set_client_key_password(esp_transport_handle_t t, const char *password, int password_len);
+
+/**
  * @brief      Set SSL client key data for mutual authentication (as DER format).
  *             Note that, this function stores the pointer to data, rather than making a copy.
  *             So this data must remain valid until after the connection is cleaned up
@@ -121,6 +131,15 @@ void esp_transport_ssl_set_alpn_protocol(esp_transport_handle_t t, const char **
  * @param      t     ssl transport
  */
 void esp_transport_ssl_skip_common_name_check(esp_transport_handle_t t);
+
+/**
+ * @brief      Set the ssl context to use secure element (atecc608a) for client(device) private key and certificate
+ *
+ * @note       Recommended to be used with ESP32-WROOM-32SE (which has inbuilt ATECC608A a.k.a Secure Element)
+ *
+ * @param      t     ssl transport
+ */
+void esp_transport_ssl_use_secure_element(esp_transport_handle_t t);
 
 /**
  * @brief      Set PSK key and hint for PSK server/client verification in esp-tls component.

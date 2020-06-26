@@ -26,6 +26,8 @@ typedef enum {
     GPIO_PORT_MAX,
 } gpio_port_t;
 
+/** @cond */    //Doxy command to hide preprocessor definitions from docs */
+
 #define GPIO_SEL_0              (BIT(0))                         /*!< Pin 0 selected */
 #define GPIO_SEL_1              (BIT(1))                         /*!< Pin 1 selected */
 #define GPIO_SEL_2              (BIT(2))                         /*!< Pin 2 selected */
@@ -106,7 +108,7 @@ typedef enum {
 #define GPIO_PIN_REG_25          IO_MUX_GPIO25_REG
 #define GPIO_PIN_REG_26          IO_MUX_GPIO26_REG
 #define GPIO_PIN_REG_27          IO_MUX_GPIO27_REG
-#if CONFIG_IDF_TARGET_ESP32S2BETA
+#if CONFIG_IDF_TARGET_ESP32S2
 #define GPIO_PIN_REG_28          IO_MUX_GPIO28_REG
 #define GPIO_PIN_REG_29          IO_MUX_GPIO29_REG
 #define GPIO_PIN_REG_30          IO_MUX_GPIO30_REG
@@ -129,6 +131,8 @@ typedef enum {
 #define GPIO_PIN_REG_45          IO_MUX_GPIO45_REG
 #define GPIO_PIN_REG_46          IO_MUX_GPIO46_REG
 #endif
+
+/** @endcond */
 
 typedef enum {
     GPIO_NUM_NC = -1,    /*!< Use to signal not connected to S/W */
